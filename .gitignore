@@ -44,3 +44,22 @@ next-env.d.ts
 sqlite.db
 db.sqlite
 db.db
+
+# drizzle
+.drizzle
+.drizzle/
+
+# drizzle-kit
+.drizzle-kit
+.drizzle-kit/
+
+# vitest
+.vitest
+.vitest/
+
+# playwright
+.playwright
+.playwright/
+playwright-report/
+
+test-results/

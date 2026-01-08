@@ -1,8 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Harmony
+
+A modern web application built with [Next.js](https://nextjs.org), utilizing [Drizzle ORM](https://orm.drizzle.team) with [Turso](https://turso.tech) (libSQL) for the database layer, and styled with [Tailwind CSS](https://tailwindcss.com).
+
+## Tech Stack
+
+- **Framework:** [Next.js 15](https://nextjs.org) (App Router)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com) & [Radix UI](https://www.radix-ui.com/)
+- **Database:** [Turso](https://turso.tech) (libSQL)
+- **ORM:** [Drizzle ORM](https://orm.drizzle.team)
+- **State Management:** [Zustand](https://zustand-demo.pmnd.rs/)
+- **Icons:** [Lucide React](https://lucide.dev)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+Ensure you have the following installed on your machine:
+
+- **Node.js** (v18 or later recommended)
+- **npm**, **yarn**, **pnpm**, or **bun**
+
+### Environment Setup
+
+1. Copy the example environment file (or create a new one):
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+   _(Note: If `.env.local.example` does not exist, create a `.env.local` file in the root directory.)_
+
+2. Configure the following environment variables in `.env.local`:
+
+   ```env
+   TURSO_DATABASE_URL="libsql://your-database-url.turso.io"
+   TURSO_AUTH_TOKEN="your-turso-auth-token"
+   ```
+
+### Installation
+
+Install the project dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### Database Setup
+
+This project uses Drizzle Kit for database migrations and management.
+
+- **Generate Migrations:**
+
+  ```bash
+  npm run db:generate
+  ```
+
+- **Run Migrations:**
+
+  ```bash
+  npm run db:migrate
+  ```
+
+- **Push Schema Changes Directy (Prototyping):**
+
+  ```bash
+  npm run db:push
+  ```
+
+- **Open Drizzle Studio:**
+  ```bash
+  npm run db:studio
+  ```
+
+### Running the Development Server
+
+Start the local development server:
 
 ```bash
 npm run dev
@@ -16,21 +95,21 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/app`: Next.js App Router pages and layouts.
+- `/components`: Reusable UI components.
+- `/db`: Database schema and connection configuration.
+- `/services`: Business logic and data access layers.
+- `/stores`: Zustand state management stores.
+- `/public`: Static assets.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `dev`: Runs the development server.
+- `build`: Builds the application for production.
+- `start`: Starts the production server.
+- `lint`: Runs ESLint.
+- `db:generate`: Generates SQL migrations based on schema changes.
+- `db:migrate`: Applies migrations to the database.
+- `db:studio`: Opens Drizzle Studio to view and edit data.

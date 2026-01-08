@@ -1,6 +1,5 @@
+import { toast } from 'sonner';
 import { create } from 'zustand';
-import { db } from '@/db';
-import { appSettings, schedules } from '@/db/schema';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Team } from '@/@types/teams';
 import { Member } from '@/@types/members';
@@ -23,6 +22,12 @@ import {
   listSchedules,
 } from '@/services/schedule.service';
 import { listSettings, toggleFriday } from '@/services/attendance.service';
+
+export interface AttendanceData {
+  teams: Team[];
+  schedule: AttendanceSchedule[];
+  includeFriday: boolean;
+}
 
 interface AttendanceState {
   localSchedule: AttendanceSchedule[] | null;
@@ -105,7 +110,35 @@ export function useTeamMutations() {
       const result = await createTeam({ name, color, members: [] });
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async name => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          const color = getNextColor(old.teams || []);
+          // Optimistic team with temp ID
+          const newTeam = { id: -Math.random(), name, color, members: [] };
+          return {
+            ...old,
+            teams: [...old.teams, newTeam],
+          };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _newTeam, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Team added successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   const removeTeamMutation = useMutation({
@@ -113,7 +146,32 @@ export function useTeamMutations() {
       const result = await deleteTeam(id);
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async id => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            teams: old.teams.filter((t: Team) => t.id !== id),
+          };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Team removed successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   const updateTeamMutation = useMutation({
@@ -121,7 +179,34 @@ export function useTeamMutations() {
       const result = await updateTeam({ ...team }, id);
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async ({ team, id }) => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            teams: old.teams.map((t: Team) =>
+              t.id === id ? { ...t, ...team } : t
+            ),
+          };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Team updated successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   return {
@@ -146,7 +231,43 @@ export function useMemberMutations() {
       const result = await createMember(member);
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async member => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          // Find team and add member optimistically
+          const updatedTeams = old.teams.map((t: Team) => {
+            if (t.id === member.teamId) {
+              return {
+                ...t,
+                members: [
+                  ...t.members,
+                  { ...member, id: -Math.random() }, // Temp ID
+                ],
+              };
+            }
+            return t;
+          });
+
+          return { ...old, teams: updatedTeams };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _member, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Member added successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   const removeMemberMutation = useMutation({
@@ -154,7 +275,34 @@ export function useMemberMutations() {
       const result = await deleteMember(id);
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async id => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          // Remove member from whichever team they belong to
+          const updatedTeams = old.teams.map((t: Team) => ({
+            ...t,
+            members: t.members.filter((m: Member) => m.id !== id),
+          }));
+          return { ...old, teams: updatedTeams };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Member removed successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   const updateMemberMutation = useMutation({
@@ -162,7 +310,41 @@ export function useMemberMutations() {
       const result = await updateMember(id, member);
       return result;
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async ({ member, id }) => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          const updatedTeams = old.teams.map((t: Team) => {
+            // We might not knwo the teamId from update param easily if it changed,
+            // but typically member updates are in place or moved.
+            // For simplicity, we assume we update the member wherever found.
+            return {
+              ...t,
+              members: t.members.map((m: Member) =>
+                m.id === id ? { ...m, ...member } : m
+              ),
+            };
+          });
+
+          return { ...old, teams: updatedTeams };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Member updated successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   return {
@@ -330,7 +512,32 @@ export function useSettingsMutations() {
       const newValue = !includeFriday;
       await toggleFriday(newValue);
     },
-    onSuccess: () => invalidateData(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            includeFriday: !old.includeFriday,
+          };
+        }
+      );
+
+      return { previousData };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['attendance-data'], context.previousData);
+      }
+    },
+    onSuccess: () => {
+      toast.success('Settings updated successfully');
+    },
+    onSettled: () => invalidateData(),
   });
 
   return {

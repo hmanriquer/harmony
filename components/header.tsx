@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { logout } from '@/lib/actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ToggleTheme } from './toggle-theme';
 
 export async function Header() {
   const session = await auth();
@@ -27,6 +28,7 @@ export async function Header() {
               <span className="text-sm text-muted-foreground mr-2">
                 {session.user?.name || 'User'}
               </span>
+              <ToggleTheme />
               <Button
                 variant="ghost"
                 size="icon"

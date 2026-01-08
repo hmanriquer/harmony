@@ -137,7 +137,7 @@ export function ScheduleView({
               onClick={onGenerate}
               disabled={teams.length === 0}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-1 h-4 w-4" />
               Generate
             </Button>
           </div>

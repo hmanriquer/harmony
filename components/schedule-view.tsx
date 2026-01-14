@@ -22,13 +22,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { DraggableTeamChip } from './draggable-team-chip';
 import { DroppableDay } from './droppable-day';
@@ -318,33 +311,40 @@ export function ScheduleView({
                   )}
                 </div>
 
-                {/* Manual Add Button */}
-                <div className="mt-1">
-                  <Select onValueChange={(val) => handleManualAdd(i, val)}>
-                    <SelectTrigger 
-                      className="h-6 text-[10px] px-2 w-full bg-background/50 hover:bg-background border-dashed"
-                    >
-                       <div className="flex items-center justify-center gap-1">
-                          <Plus className="h-3 w-3" />
-                          <span>Add Team</span>
-                       </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {avaliableTeams.length === 0 ? (
-                         <SelectItem value="none" disabled>No teams available</SelectItem>
-                      ) : (
-                        avaliableTeams.map(team => (
-                          <SelectItem key={team.id} value={team.id.toString()}>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: team.color }} />
-                              {team.name}
-                            </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Manual Add Button */}
+                  <div className="mt-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="h-6 text-[10px] px-2 w-full bg-background/50 hover:bg-background border-dashed shadow-none"
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                           <Plus className="mr-1 h-3 w-3" />
+                           Add Team
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-1" onPointerDown={(e) => e.stopPropagation()}>
+                        <div className="max-h-[200px] overflow-y-auto space-y-1">
+                          {avaliableTeams.length === 0 ? (
+                             <div className="text-xs text-muted-foreground p-2 text-center">No teams available</div>
+                          ) : (
+                            avaliableTeams.map(team => (
+                              <button
+                                key={team.id}
+                                onClick={() => handleManualAdd(i, team.id.toString())}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors text-left"
+                              >
+                                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: team.color }} />
+                                <span className="truncate">{team.name}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
               </div>
             );
           })}

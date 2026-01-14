@@ -17,6 +17,7 @@ export const teamMembers = sqliteTable('team_members', {
   teamId: int().notNull(),
   name: text().notNull(),
   email: text(),
+  chairNumber: int()
 });
 
 export const schedules = sqliteTable('schedules', {
@@ -28,6 +29,13 @@ export const schedules = sqliteTable('schedules', {
 export const appSettings = sqliteTable('app_settings', {
   id: int().primaryKey({ autoIncrement: true }),
   includeFriday: int({ mode: 'boolean' }).notNull(),
+  total_chairs: int()
+});
+
+export const dailySettings = sqliteTable('daily_settings', {
+  id: int().primaryKey({ autoIncrement: true }),
+  dayIndex: int().notNull().unique(), // 0=Sunday, 1=Monday, etc.
+  occupancyPercentage: int().notNull().default(100),
 });
 
 import { relations } from 'drizzle-orm';

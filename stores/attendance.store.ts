@@ -22,11 +22,18 @@ import {
   listSchedules,
 } from '@/services/schedule.service';
 import { listSettings, toggleFriday } from '@/services/attendance.service';
+import {
+  listDailySettings,
+  updateDailyOccupancy,
+  updateOneSetting
+} from '@/services/settings.service';
 
 export interface AttendanceData {
   teams: Team[];
   schedule: AttendanceSchedule[];
   includeFriday: boolean;
+  totalChairs: number;
+  dailySettings: { dayIndex: number; occupancyPercentage: number }[];
 }
 
 interface AttendanceState {
@@ -57,10 +64,16 @@ const getNextColor = (teams: Team[]): string => {
 };
 
 async function fetchAttendanceData() {
-  const [teamsResult, scheduleResult, settingsResult] = await Promise.all([
+  const [
+    teamsResult,
+    scheduleResult,
+    settingsResult,
+    dailySettingsResult,
+  ] = await Promise.all([
     listTeams(),
     listSchedules(),
     listSettings(),
+    listDailySettings(),
   ]);
 
   const teams: Team[] = teamsResult || [];
@@ -80,6 +93,8 @@ async function fetchAttendanceData() {
     teams,
     schedule,
     includeFriday: settingsResult[0]?.includeFriday ?? false,
+    totalChairs: settingsResult[0]?.total_chairs ?? 0,
+    dailySettings: dailySettingsResult,
   };
 }
 
@@ -540,7 +555,65 @@ export function useSettingsMutations() {
     onSettled: () => invalidateData(),
   });
 
+  const updateDailyMutation = useMutation({
+    mutationFn: async ({
+      dayIndex,
+      percentage,
+    }: {
+      dayIndex: number;
+      percentage: number;
+    }) => {
+      await updateDailyOccupancy(dayIndex, percentage);
+    },
+    onMutate: async ({ dayIndex, percentage }) => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          const newSettings = [...(old.dailySettings || [])];
+          const idx = newSettings.findIndex(s => s.dayIndex === dayIndex);
+          if (idx >= 0) {
+            newSettings[idx] = { ...newSettings[idx], occupancyPercentage: percentage };
+          } else {
+            newSettings.push({ dayIndex, occupancyPercentage: percentage });
+          }
+          return { ...old, dailySettings: newSettings };
+        }
+      );
+
+      return { previousData };
+    },
+    onSuccess: () => toast.success('Occupancy updated'),
+    onSettled: () => invalidateData(),
+  });
+
+  const updateTotalChairsMutation = useMutation({
+    mutationFn: async (total: number) => {
+      await updateOneSetting('total_chairs', total);
+    },
+    onMutate: async total => {
+      await queryClient.cancelQueries({ queryKey: ['attendance-data'] });
+      const previousData = queryClient.getQueryData(['attendance-data']);
+      queryClient.setQueryData(
+        ['attendance-data'],
+        (old: AttendanceData | undefined) => {
+          if (!old) return old;
+          return { ...old, totalChairs: total };
+        }
+      );
+      return { previousData };
+    },
+    onSuccess: () => toast.success('Total chairs updated'),
+    onSettled: () => invalidateData(),
+  });
+
   return {
     toggleFriday: () => toggleFridayMutation.mutate(),
+    updateDailyOccupancy: (dayIndex: number, percentage: number) =>
+      updateDailyMutation.mutate({ dayIndex, percentage }),
+    updateTotalChairs: (total: number) => updateTotalChairsMutation.mutate(total),
   };
 }

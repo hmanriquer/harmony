@@ -9,6 +9,8 @@ export function DashboardView() {
     teams,
     schedule,
     includeFriday,
+    totalChairs,
+    dailySettings,
     isLoading,
     addTeam,
     removeTeam,
@@ -18,6 +20,8 @@ export function DashboardView() {
     clearSchedule,
     updateTeamSchedule,
     toggleFriday,
+    updateTotalChairs,
+    updateDailyOccupancy,
   } = useAttendance();
 
   if (isLoading)
@@ -45,10 +49,14 @@ export function DashboardView() {
             teams={teams}
             schedule={schedule}
             includeFriday={includeFriday}
+            totalChairs={totalChairs}
+            dailySettings={dailySettings}
             onToggleFriday={toggleFriday}
             onGenerate={generateSchedule}
             onUpdateSchedule={updateTeamSchedule}
             onClear={clearSchedule}
+            onUpdateTotalChairs={updateTotalChairs}
+            onUpdateDailyOccupancy={updateDailyOccupancy}
           />
         </section>
       </div>

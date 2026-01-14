@@ -17,11 +17,15 @@ export function useAttendance() {
   const teams = data?.teams || [];
   const schedule = (localSchedule ?? data?.schedule) || [];
   const includeFriday = data?.includeFriday || false;
+  const totalChairs = data?.totalChairs || 0;
+  const dailySettings = data?.dailySettings || [];
 
   return {
     teams,
     schedule,
     includeFriday,
+    totalChairs,
+    dailySettings,
     isLoading,
     ...teamMutations,
     ...memberMutations,

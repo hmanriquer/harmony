@@ -4,6 +4,7 @@ export const createMemberSchema = z.object({
   teamId: z.number(),
   name: z.string().min(3, 'Name must be at least 3 characters long'),
   email: z.string().email('Invalid email address').optional().nullable(),
+  chairNumber: z.number().optional().nullable(),
 });
 
 export const memberSchema = z.object({
@@ -11,6 +12,7 @@ export const memberSchema = z.object({
   teamId: z.number(),
   name: z.string(),
   email: z.string().optional().nullable(),
+  chairNumber: z.number().optional().nullable(),
 });
 
 export type Member = z.infer<typeof memberSchema>;

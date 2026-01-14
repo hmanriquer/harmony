@@ -46,6 +46,7 @@ export function TeamCard({
   const [isOpen, setIsOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberChair, setNewMemberChair] = useState<number | undefined>();
 
   const handleAddMember = () => {
     if (newMemberName.trim()) {
@@ -53,9 +54,11 @@ export function TeamCard({
         name: newMemberName.trim(),
         email: newMemberEmail.trim() || undefined,
         teamId: team.id,
+        chairNumber: newMemberChair,
       });
       setNewMemberName('');
       setNewMemberEmail('');
+      setNewMemberChair(undefined);
     }
   };
 
@@ -131,11 +134,14 @@ export function TeamCard({
                   >
                     <div>
                       <p className="text-sm font-medium">{member.name}</p>
-                      {member.email && (
-                        <p className="text-xs text-muted-foreground">
-                          {member.email}
-                        </p>
-                      )}
+                      <div className="flex gap-2 text-xs text-muted-foreground">
+                        {member.email && <span>{member.email}</span>}
+                        {member.chairNumber && (
+                          <span className="font-mono bg-primary/10 text-primary px-1 rounded">
+                            #{member.chairNumber}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <Button
                       variant="ghost"
@@ -176,6 +182,16 @@ export function TeamCard({
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Chair # (opt)"
+                  type="number"
+                  value={newMemberChair || ''}
+                  onChange={e => setNewMemberChair(e.target.value ? parseInt(e.target.value) : undefined)}
+                  onKeyDown={handleKeyDown}
+                  className="h-9 w-24"
+                />
               </div>
             </div>
           </div>

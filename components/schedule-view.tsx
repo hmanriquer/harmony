@@ -11,7 +11,7 @@ import {
   useSensors,
   pointerWithin,
 } from '@dnd-kit/core';
-import { Plus } from 'lucide-react';
+import { Eraser, Plus } from 'lucide-react';
 import { RefreshCw, Calendar, Settings, AlertCircle } from 'lucide-react';
 import { Team } from '@/@types/teams';
 import {
@@ -126,17 +126,16 @@ export function ScheduleView({
   const getDayOccupancy = (dayIndex: number) => {
     const dayTeams = getTeamsForDay(dayIndex);
     const totalMembers = dayTeams.reduce(
-      (sum, team) => sum + team.members.length,
+      (sum, team) => sum + (team.capacity || 0),
       0
     );
     const target =
       dailySettings.find(s => s.dayIndex === dayIndex)?.occupancyPercentage ??
       100;
-    
+
     // Calculate actual percentage based on total capacity
-    const actualPercentage = totalChairs > 0 
-      ? Math.round((totalMembers / totalChairs) * 100) 
-      : 0;
+    const actualPercentage =
+      totalChairs > 0 ? Math.round((totalMembers / totalChairs) * 100) : 0;
 
     return { totalMembers, target, actualPercentage };
   };
@@ -144,24 +143,24 @@ export function ScheduleView({
   const handleManualAdd = (dayIndex: number, teamIdStr: string) => {
     const teamId = parseInt(teamIdStr);
     const currentSchedule = getTeamSchedule(teamId);
-    
+
     // Simple logic: If strict consecutive rule is required, we might need more complex logic.
     // For now, let's try to just add the day. The store might enforce rules.
     // However, to be safe with the current store logic helper, let's try to find a consecutive pair including this day.
-    // But if we want TRUE manual freedom, the store needs update. 
+    // But if we want TRUE manual freedom, the store needs update.
     // Assuming the user wants to keep the 2-day rule for now but just "place" them manually.
-    
+
     // If team is not scheduled, add to [day, day+1] or [day-1, day]
     if (currentSchedule.length === 0) {
       const nextDay = dayIndex + 1 < maxDays ? dayIndex + 1 : dayIndex - 1;
-      const newDays = [dayIndex, nextDay].sort((a,b) => a-b);
-       onUpdateSchedule(teamId, newDays, maxDays);
+      const newDays = [dayIndex, nextDay].sort((a, b) => a - b);
+      onUpdateSchedule(teamId, newDays, maxDays);
     } else {
-       // If already scheduled, maybe move them? 
-       // Let's just move their block to start or end at this day.
-       const nextDay = dayIndex + 1 < maxDays ? dayIndex + 1 : dayIndex - 1;
-       const newDays = [dayIndex, nextDay].sort((a,b) => a-b);
-       onUpdateSchedule(teamId, newDays, maxDays);
+      // If already scheduled, maybe move them?
+      // Let's just move their block to start or end at this day.
+      const nextDay = dayIndex + 1 < maxDays ? dayIndex + 1 : dayIndex - 1;
+      const newDays = [dayIndex, nextDay].sort((a, b) => a - b);
+      onUpdateSchedule(teamId, newDays, maxDays);
     }
   };
 
@@ -171,7 +170,7 @@ export function ScheduleView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Weekly Schedule</h2>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
             <Switch
               id="friday-toggle"
@@ -217,6 +216,7 @@ export function ScheduleView({
               onClick={onClear}
               disabled={schedule.length === 0}
             >
+              <Eraser className="mr-1 size-4" />
               Clear
             </Button>
             <Button
@@ -244,7 +244,8 @@ export function ScheduleView({
           style={{ gridTemplateColumns: `repeat(${maxDays}, 1fr)` }}
         >
           {days.map((day, i) => {
-            const { totalMembers, target, actualPercentage } = getDayOccupancy(i);
+            const { totalMembers, target, actualPercentage } =
+              getDayOccupancy(i);
             const isOverCapacity = actualPercentage > target;
             // User requested to work without assigned teams filtering, so we show all teams.
             // We could still mark them as "Assigned" in the UI if needed, but for now just show all.
@@ -265,7 +266,9 @@ export function ScheduleView({
                 {/* Occupancy Info */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span>{totalMembers} / {totalChairs}</span>
+                    <span>
+                      {totalMembers} / {totalChairs}
+                    </span>
                     <Popover>
                       <PopoverTrigger asChild>
                         <button className="hover:underline cursor-pointer">
@@ -279,17 +282,17 @@ export function ScheduleView({
                             type="number"
                             className="h-7 text-xs"
                             defaultValue={target}
-                            onBlur={(e) => {
+                            onBlur={e => {
                               const val = parseInt(e.target.value);
                               if (!isNaN(val) && val >= 0 && val <= 100) {
                                 onUpdateDailyOccupancy(i, val);
                               }
                             }}
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter') {
                                 const val = parseInt(e.currentTarget.value);
                                 if (!isNaN(val) && val >= 0 && val <= 100) {
-                                    onUpdateDailyOccupancy(i, val);
+                                  onUpdateDailyOccupancy(i, val);
                                 }
                               }
                             }}
@@ -298,9 +301,9 @@ export function ScheduleView({
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <Progress 
-                    value={actualPercentage} 
-                    max={100} 
+                  <Progress
+                    value={actualPercentage}
+                    max={100}
                     className={`h-1.5 ${isOverCapacity ? 'bg-destructive/20 [&>div]:bg-destructive' : ''}`}
                   />
                   {isOverCapacity && (
@@ -311,40 +314,50 @@ export function ScheduleView({
                   )}
                 </div>
 
-                  {/* Manual Add Button */}
-                  <div className="mt-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-6 text-[10px] px-2 w-full bg-background/50 hover:bg-background border-dashed shadow-none"
-                          onPointerDown={(e) => e.stopPropagation()}
-                        >
-                           <Plus className="mr-1 h-3 w-3" />
-                           Add Team
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-1" onPointerDown={(e) => e.stopPropagation()}>
-                        <div className="max-h-[200px] overflow-y-auto space-y-1">
-                          {avaliableTeams.length === 0 ? (
-                             <div className="text-xs text-muted-foreground p-2 text-center">No teams available</div>
-                          ) : (
-                            avaliableTeams.map(team => (
-                              <button
-                                key={team.id}
-                                onClick={() => handleManualAdd(i, team.id.toString())}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors text-left"
-                              >
-                                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: team.color }} />
-                                <span className="truncate">{team.name}</span>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                {/* Manual Add Button */}
+                <div className="mt-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-[10px] px-2 w-full bg-background/50 hover:bg-background border-dashed shadow-none"
+                        onPointerDown={e => e.stopPropagation()}
+                      >
+                        <Plus className="mr-1 h-3 w-3" />
+                        Add Team
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-48 p-1"
+                      onPointerDown={e => e.stopPropagation()}
+                    >
+                      <div className="max-h-[200px] overflow-y-auto space-y-1">
+                        {avaliableTeams.length === 0 ? (
+                          <div className="text-xs text-muted-foreground p-2 text-center">
+                            No teams available
+                          </div>
+                        ) : (
+                          avaliableTeams.map(team => (
+                            <button
+                              key={team.id}
+                              onClick={() =>
+                                handleManualAdd(i, team.id.toString())
+                              }
+                              className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors text-left"
+                            >
+                              <div
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: team.color }}
+                              />
+                              <span className="truncate">{team.name}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             );
           })}
@@ -385,7 +398,7 @@ export function ScheduleView({
               );
             })}
           </div>
-          
+
           {/* Drag overlay */}
           <DragOverlay>
             {activeTeam && activeDayIndex !== null && (

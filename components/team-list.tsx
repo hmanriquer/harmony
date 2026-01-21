@@ -12,6 +12,7 @@ interface TeamsListProps {
   teams: Team[];
   onAddTeam: (name: string) => void;
   onRemoveTeam: (teamId: number) => void;
+  onUpdateTeam: (teamId: number, data: Partial<Team>) => void;
   onAddMember: (teamId: number, member: Omit<TeamMember, 'id'>) => void;
   onRemoveMember: (teamId: number, memberId: number) => void;
 }
@@ -20,6 +21,7 @@ export function TeamsList({
   teams,
   onAddTeam,
   onRemoveTeam,
+  onUpdateTeam,
   onAddMember,
   onRemoveMember,
 }: TeamsListProps) {
@@ -80,6 +82,7 @@ export function TeamsList({
               key={team.id}
               team={team}
               onRemove={() => onRemoveTeam(team.id)}
+              onUpdate={data => onUpdateTeam(team.id, data)}
               onAddMember={member => onAddMember(team.id, member)}
               onRemoveMember={memberId => onRemoveMember(team.id, memberId)}
             />

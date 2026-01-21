@@ -25,7 +25,7 @@ import { listSettings, toggleFriday } from '@/services/attendance.service';
 import {
   listDailySettings,
   updateDailyOccupancy,
-  updateOneSetting
+  updateOneSetting,
 } from '@/services/settings.service';
 
 export interface AttendanceData {
@@ -64,17 +64,13 @@ const getNextColor = (teams: Team[]): string => {
 };
 
 async function fetchAttendanceData() {
-  const [
-    teamsResult,
-    scheduleResult,
-    settingsResult,
-    dailySettingsResult,
-  ] = await Promise.all([
-    listTeams(),
-    listSchedules(),
-    listSettings(),
-    listDailySettings(),
-  ]);
+  const [teamsResult, scheduleResult, settingsResult, dailySettingsResult] =
+    await Promise.all([
+      listTeams(),
+      listSchedules(),
+      listSettings(),
+      listDailySettings(),
+    ]);
 
   const teams: Team[] = teamsResult || [];
 
@@ -122,7 +118,12 @@ export function useTeamMutations() {
   const addTeamMutation = useMutation({
     mutationFn: async (name: string) => {
       const color = getNextColor(teams);
-      const result = await createTeam({ name, color, members: [] });
+      const result = await createTeam({
+        name,
+        color,
+        capacity: 0,
+        members: [],
+      });
       return result;
     },
     onMutate: async name => {
@@ -135,7 +136,13 @@ export function useTeamMutations() {
           if (!old) return old;
           const color = getNextColor(old.teams || []);
           // Optimistic team with temp ID
-          const newTeam = { id: -Math.random(), name, color, members: [] };
+          const newTeam = {
+            id: -Math.random(),
+            name,
+            color,
+            capacity: 0,
+            members: [],
+          };
           return {
             ...old,
             teams: [...old.teams, newTeam],
@@ -403,6 +410,7 @@ export function useScheduleMutations() {
       let minLoad = Infinity;
 
       for (const pair of consecutivePairs) {
+        // Calculate load based on capacity of teams already assigned to these days
         const load = pair.reduce((sum, d) => sum + dayAssignments[d], 0);
         if (load < minLoad) {
           minLoad = load;
@@ -410,7 +418,10 @@ export function useScheduleMutations() {
         }
       }
 
-      bestPair.forEach(d => dayAssignments[d]++);
+      // Add this team's capacity to the days
+      bestPair.forEach(d => {
+        dayAssignments[d] += team.capacity || 0;
+      });
       newSchedule.push({ teamId: team.id, days: [...bestPair] });
     });
 
@@ -576,7 +587,10 @@ export function useSettingsMutations() {
           const newSettings = [...(old.dailySettings || [])];
           const idx = newSettings.findIndex(s => s.dayIndex === dayIndex);
           if (idx >= 0) {
-            newSettings[idx] = { ...newSettings[idx], occupancyPercentage: percentage };
+            newSettings[idx] = {
+              ...newSettings[idx],
+              occupancyPercentage: percentage,
+            };
           } else {
             newSettings.push({ dayIndex, occupancyPercentage: percentage });
           }
@@ -614,6 +628,7 @@ export function useSettingsMutations() {
     toggleFriday: () => toggleFridayMutation.mutate(),
     updateDailyOccupancy: (dayIndex: number, percentage: number) =>
       updateDailyMutation.mutate({ dayIndex, percentage }),
-    updateTotalChairs: (total: number) => updateTotalChairsMutation.mutate(total),
+    updateTotalChairs: (total: number) =>
+      updateTotalChairsMutation.mutate(total),
   };
 }

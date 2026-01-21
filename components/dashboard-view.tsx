@@ -14,6 +14,7 @@ export function DashboardView() {
     isLoading,
     addTeam,
     removeTeam,
+    updateTeam,
     addMember,
     removeMember,
     generateSchedule,
@@ -33,12 +34,16 @@ export function DashboardView() {
 
   return (
     <main className="container mx-auto px-6 py-8">
-      <div className="grid gap-8 lg:grid-cols-[320px_1fr] xl:grid-cols-[360px_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[370px_1fr] xl:grid-cols-[410px_1fr]">
         <aside className="space-y-6">
           <TeamsList
             teams={teams}
             onAddTeam={addTeam}
             onRemoveTeam={removeTeam}
+            onUpdateTeam={(id, data) => {
+              const team = teams.find(t => t.id === id);
+              if (team) updateTeam({ ...team, ...data }, id);
+            }}
             onAddMember={addMember}
             onRemoveMember={(_, memberId) => removeMember(memberId)}
           />

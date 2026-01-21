@@ -33,6 +33,7 @@ import {
 interface TeamCardProps {
   team: Team;
   onRemove: () => void;
+  onUpdate: (data: Partial<Team>) => void;
   onAddMember: (member: Omit<TeamMember, 'id'>) => void;
   onRemoveMember: (memberId: number) => void;
 }
@@ -40,10 +41,19 @@ interface TeamCardProps {
 export function TeamCard({
   team,
   onRemove,
+  onUpdate,
   onAddMember,
   onRemoveMember,
 }: TeamCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [capacity, setCapacity] = useState(team.capacity?.toString() ?? '0');
+
+  const handleCapacityBlur = () => {
+    const val = parseInt(capacity);
+    if (!isNaN(val) && val >= 0 && val !== team.capacity) {
+      onUpdate({ capacity: val });
+    }
+  };
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberChair, setNewMemberChair] = useState<number | undefined>();
@@ -69,24 +79,59 @@ export function TeamCard({
   };
 
   return (
-    <div className="rounded-lg border bg-card shadow-fluent-sm transition-shadow hover:shadow-fluent-md animate-fade-in">
+    <div
+      className="rounded-lg border bg-card shadow-fluent-sm transition-all hover:shadow-fluent-md animate-fade-in"
+      style={{
+        backgroundImage: `linear-gradient(to bottom right, hsl(var(--card)), color-mix(in srgb, ${team.color}, transparent 80%))`,
+      }}
+    >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div className="flex items-center justify-between p-4">
           <CollapsibleTrigger asChild>
-            <button className="flex flex-1 items-center gap-3 text-left">
+            <button className="flex flex-1 items-center gap-2 sm:gap-3 text-left w-full min-w-0">
               <div
-                className="h-3 w-3 rounded-full"
+                className="h-3 w-3 rounded-full shrink-0"
                 style={{ backgroundColor: team.color }}
               />
-              <span className="font-medium">{team.name}</span>
-              <span className="ml-2 flex items-center gap-1 text-sm text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                {team.members.length}
+              <span className="font-medium truncate mr-1 min-w-0 flex-1">
+                {team.name}
               </span>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Members Count Badge */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md border text-nowrap shrink-0">
+                  <Users className="h-3 w-3" />
+                  <span>{team.members.length}</span>
+                </div>
+
+                {/* Capacity Input Badge */}
+                <div
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md border shrink-0"
+                  title="Team Capacity"
+                >
+                  <span className="font-medium text-[10px] uppercase tracking-wider text-muted-foreground/70 text-nowrap">
+                    Cap
+                  </span>
+                  <Input
+                    type="number"
+                    className="h-5 w-8 text-center px-0 py-0 text-xs border-0 bg-transparent focus-visible:ring-0 shadow-none -my-1 min-w-[32px]"
+                    value={capacity}
+                    onChange={e => setCapacity(e.target.value)}
+                    onBlur={handleCapacityBlur}
+                    onClick={e => e.stopPropagation()}
+                    min="0"
+                    max="99"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleCapacityBlur();
+                    }}
+                  />
+                </div>
+              </div>
+
               {isOpen ? (
-                <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-1" />
               ) : (
-                <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-1" />
               )}
             </button>
           </CollapsibleTrigger>
@@ -188,7 +233,11 @@ export function TeamCard({
                   placeholder="Chair # (opt)"
                   type="number"
                   value={newMemberChair || ''}
-                  onChange={e => setNewMemberChair(e.target.value ? parseInt(e.target.value) : undefined)}
+                  onChange={e =>
+                    setNewMemberChair(
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
                   onKeyDown={handleKeyDown}
                   className="h-9 w-24"
                 />

@@ -7,6 +7,7 @@ describe('TeamCard', () => {
     id: 1,
     name: 'Test Team',
     color: '#ff0000',
+    capacity: 5,
     members: [
       { id: 1, name: 'Alice', email: 'alice@example.com', teamId: 1 },
       { id: 2, name: 'Bob', teamId: 1 },
@@ -16,6 +17,7 @@ describe('TeamCard', () => {
   const mockProps = {
     team: mockTeam,
     onRemove: vi.fn(),
+    onUpdate: vi.fn(),
     onAddMember: vi.fn(),
     onRemoveMember: vi.fn(),
   };
@@ -23,7 +25,11 @@ describe('TeamCard', () => {
   it('renders team name and member count', () => {
     render(<TeamCard {...mockProps} />);
     expect(screen.getByText('Test Team')).toBeDefined();
-    expect(screen.getByText('2')).toBeDefined();
+    // Use regex for case insensitive match as we used uppercase in UI
+    expect(screen.getByText(/cap/i)).toBeDefined();
+    // Check for input with value 5
+    const capacityInput = screen.getByDisplayValue('5');
+    expect(capacityInput).toBeDefined();
   });
 
   it('expands to show members when clicked', () => {
@@ -64,5 +70,19 @@ describe('TeamCard', () => {
       email: undefined,
       teamId: 1,
     });
+  });
+
+  it('calls onUpdate when modifying capacity', () => {
+    render(<TeamCard {...mockProps} />);
+
+    // Find capacity input (type="number")
+    const capacityInput = screen.getAllByRole('spinbutton')[0];
+    expect(capacityInput).toBeDefined();
+
+    // Change value
+    fireEvent.change(capacityInput, { target: { value: '10' } });
+    fireEvent.blur(capacityInput);
+
+    expect(mockProps.onUpdate).toHaveBeenCalledWith({ capacity: 10 });
   });
 });

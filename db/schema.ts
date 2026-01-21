@@ -10,6 +10,7 @@ export const teams = sqliteTable('teams', {
   id: int().primaryKey({ autoIncrement: true }),
   name: text().notNull().unique(),
   color: text().notNull(),
+  capacity: int().notNull().default(0),
 });
 
 export const teamMembers = sqliteTable('team_members', {
@@ -17,7 +18,7 @@ export const teamMembers = sqliteTable('team_members', {
   teamId: int().notNull(),
   name: text().notNull(),
   email: text(),
-  chairNumber: int()
+  chairNumber: int(),
 });
 
 export const schedules = sqliteTable('schedules', {
@@ -29,7 +30,7 @@ export const schedules = sqliteTable('schedules', {
 export const appSettings = sqliteTable('app_settings', {
   id: int().primaryKey({ autoIncrement: true }),
   includeFriday: int({ mode: 'boolean' }).notNull(),
-  total_chairs: int()
+  total_chairs: int(),
 });
 
 export const dailySettings = sqliteTable('daily_settings', {

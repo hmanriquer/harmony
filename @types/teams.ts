@@ -5,6 +5,7 @@ export const teamSchema = z.object({
   id: z.number(),
   name: z.string().min(1).max(255),
   color: z.string().min(1).max(255),
+  capacity: z.number().int().nonnegative().default(0),
   members: z.array(memberSchema),
 });
 

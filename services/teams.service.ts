@@ -31,7 +31,13 @@ export async function createTeam(
   data: z.infer<typeof createTeamSchema>
 ): Promise<Omit<z.infer<typeof teamSchema>, 'members'>> {
   const { members, ...teamData } = data;
-  const [createdTeam] = await db.insert(teams).values(teamData).returning();
+  const [createdTeam] = await db
+    .insert(teams)
+    .values({
+      ...teamData,
+      capacity: teamData.capacity ?? 0, // Ensure capacity is set
+    })
+    .returning();
   return createdTeam;
 }
 
@@ -43,7 +49,13 @@ export async function updateTeam(
 
   const { members, ...teamData } = data;
 
-  await db.update(teams).set(teamData).where(eq(teams.id, id));
+  await db
+    .update(teams)
+    .set({
+      ...teamData,
+      capacity: teamData.capacity,
+    })
+    .where(eq(teams.id, id));
 
   return getTeam(id);
 }

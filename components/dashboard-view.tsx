@@ -3,6 +3,7 @@
 import { TeamsList } from '@/components/team-list';
 import { ScheduleView } from '@/components/schedule-view';
 import { useAttendance } from '@/hooks/use-attendance';
+import Loading from '@/components/loading';
 
 export function DashboardView() {
   const {
@@ -25,12 +26,7 @@ export function DashboardView() {
     updateDailyOccupancy,
   } = useAttendance();
 
-  if (isLoading)
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-73px)]">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+  if (isLoading) return <Loading />;
 
   return (
     <main className="container mx-auto px-6 py-8">

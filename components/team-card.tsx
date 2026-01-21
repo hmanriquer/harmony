@@ -8,6 +8,7 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  Pencil,
 } from 'lucide-react';
 import { Team } from '@/@types/teams';
 import { Member as TeamMember } from '@/@types/members';
@@ -47,6 +48,28 @@ export function TeamCard({
 }: TeamCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [capacity, setCapacity] = useState(team.capacity?.toString() ?? '0');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(team.name);
+
+  const handleNameSave = () => {
+    if (tempName.trim() && tempName !== team.name) {
+      onUpdate({ name: tempName.trim() });
+    } else {
+      setTempName(team.name); // Revert if empty or unchanged
+    }
+    setIsEditingName(false);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setTempName(team.name);
+      setIsEditingName(false);
+    }
+  };
 
   const handleCapacityBlur = () => {
     const val = parseInt(capacity);
@@ -80,7 +103,7 @@ export function TeamCard({
 
   return (
     <div
-      className="rounded-lg border bg-card shadow-fluent-sm transition-all hover:shadow-fluent-md animate-fade-in"
+      className="rounded-lg border bg-card shadow-fluent-sm transition-all hover:shadow-fluent-md animate-fade-in group"
       style={{
         backgroundImage: `linear-gradient(to bottom right, hsl(var(--card)), color-mix(in srgb, ${team.color}, transparent 80%))`,
       }}
@@ -93,9 +116,38 @@ export function TeamCard({
                 className="h-3 w-3 rounded-full shrink-0"
                 style={{ backgroundColor: team.color }}
               />
-              <span className="font-medium truncate mr-1 min-w-0 flex-1">
-                {team.name}
-              </span>
+
+              <div className="flex-1 min-w-0 mr-1 flex items-center gap-2">
+                {isEditingName ? (
+                  <Input
+                    value={tempName}
+                    onChange={e => setTempName(e.target.value)}
+                    onBlur={handleNameSave}
+                    onKeyDown={handleNameKeyDown}
+                    onClick={e => e.stopPropagation()}
+                    className="h-6 py-0 px-1 text-sm font-medium min-w-0 w-full"
+                    autoFocus
+                  />
+                ) : (
+                  <div
+                    className="flex items-center gap-2 min-w-0 group/name cursor-text"
+                    onDoubleClick={e => {
+                      e.stopPropagation();
+                      setIsEditingName(true);
+                    }}
+                    title="Double click to rename"
+                  >
+                    <span className="font-medium truncate">{team.name}</span>
+                    <Pencil
+                      className="h-3 w-3 text-muted-foreground opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setIsEditingName(true);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {/* Members Count Badge */}

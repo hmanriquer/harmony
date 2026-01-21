@@ -75,14 +75,30 @@ describe('TeamCard', () => {
   it('calls onUpdate when modifying capacity', () => {
     render(<TeamCard {...mockProps} />);
 
-    // Find capacity input (type="number")
-    const capacityInput = screen.getAllByRole('spinbutton')[0];
-    expect(capacityInput).toBeDefined();
+    // Find capacity input by looking for the "Cap" label's sibling input
+    // Best way given current structure is to find by value since it's an input
+    const capacityInput = screen.getByDisplayValue('5'); // Using mockTeam's capacity
 
-    // Change value
-    fireEvent.change(capacityInput, { target: { value: '10' } });
+    fireEvent.change(capacityInput, { target: { value: '10' } }); // Changing to 10
     fireEvent.blur(capacityInput);
 
     expect(mockProps.onUpdate).toHaveBeenCalledWith({ capacity: 10 });
+  });
+
+  it('calls onUpdate when renaming team', () => {
+    render(<TeamCard {...mockProps} />);
+
+    // Find team name and double click
+    const teamName = screen.getByText('Test Team'); // Using mockTeam's name
+    fireEvent.doubleClick(teamName);
+
+    // Find input (should be focused and have current value)
+    const nameInput = screen.getByDisplayValue('Test Team'); // Using mockTeam's name
+
+    // Change name and save
+    fireEvent.change(nameInput, { target: { value: 'New Name' } });
+    fireEvent.blur(nameInput);
+
+    expect(mockProps.onUpdate).toHaveBeenCalledWith({ name: 'New Name' });
   });
 });

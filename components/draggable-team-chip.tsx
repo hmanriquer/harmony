@@ -17,25 +17,23 @@ export function DraggableTeamChip({ team, dayIndex }: DraggableTeamChipProps) {
       data: { team, fromDay: dayIndex },
     });
 
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    backgroundColor: `${team.color}15`,
-    borderLeft: `3px solid ${team.color}`,
-  };
-
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-shadow cursor-grab active:cursor-grabbing ${
+      style={{
+        transform: CSS.Translate.toString(transform),
+        backgroundColor: `color-mix(in srgb, ${team.color}, transparent 85%)`,
+        borderLeft: `4px solid ${team.color}`,
+      }}
+      className={`group flex items-center gap-2 rounded-lg pl-3 pr-4 py-2.5 text-sm font-semibold transition-all cursor-grab active:cursor-grabbing border-y border-r border-transparent hover:border-border/50 ${
         isDragging
-          ? 'shadow-fluent-lg opacity-90 z-50'
-          : 'hover:shadow-fluent-md'
+          ? 'shadow-fluent-lg opacity-90 z-50 scale-105'
+          : 'shadow-sm hover:shadow-md'
       }`}
       {...listeners}
       {...attributes}
     >
-      <GripVertical className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      <GripVertical className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
       <span className="truncate">{team.name}</span>
     </div>
   );
